@@ -383,16 +383,22 @@ This starter includes complete email/password authentication with OTP verificati
 
 ### Preview Mode (One-Click Test Login)
 
-In preview deployments, a prominent "Continue as Test User" button appears on login/signup pages for instant access without credentials. This is controlled by the `VITE_IS_PREVIEW` environment variable:
+In preview deployments, a prominent "Continue as Test User" button appears on login/signup pages for instant access without credentials.
 
-- **Preview deployments**: `VITE_IS_PREVIEW=true` → Test login button visible
-- **Production deployments**: `VITE_IS_PREVIEW=false` → Test login button hidden
+Two env vars gate this, and both are set automatically by `init_app_project`:
 
-The button automatically signs in as the test user (or creates the account if needed). This is for the user to check out the preview app quickly without needing to login each time.
+- **`VITE_IS_PREVIEW`** (Vercel build env): controls whether the button is rendered in the frontend.
+  - Preview build: `true` → button visible. Production build: `false` → button hidden.
+- **`VIKTOR_SPACES_IS_PREVIEW`** (Convex deployment env): controls whether the `@test.local` credentials provider is registered server-side in `convex/auth.ts`.
+  - Dev deployment: `true` → provider registered. Prod deployment: `false` (or unset) → provider omitted; calling `signIn("test", ...)` against prod returns "Provider not configured".
+
+The button signs in as the per-app test user (or creates the account on first click via the `signUp` flow). This is for the user to check out the preview app quickly without needing to log in each time.
 
 ### Test User (for Automated Testing)
 
-Always use `runTest()` for e2e tests — it automatically logs in as the test user (`agent@test.local` / `TestAgent123!`):
+Each app has its own auto-generated test user. The credentials are baked into `scripts/testUser.ts`, `convex/seedTestUser.ts`, and `src/components/TestUserLoginSection.tsx` at `init_app_project` time.
+
+`runTest()` for e2e tests automatically logs in as that user:
 
 ```ts
 import { runTest } from "./scripts/auth";
